@@ -1,68 +1,86 @@
 package com.example.configserver.controller;
 
-import com.example.configserver.dto.ConfigurationItemDTO;
-import com.example.configserver.service.ConfigurationService;
+import com.example.configserver.model.ConfigurationItem;
+import com.example.configserver.service.ConfigurationItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/items")
-@RequiredArgsConstructor
 @Tag(name = "Configuration Items", description = "API for managing configuration items")
 public class ConfigurationItemController {
 
-    private final ConfigurationService configurationService;
+    private final ConfigurationItemService itemService;
+
+    @Autowired
+    private ConfigurationItemController(ConfigurationItemService configurationItemService) {
+        itemService = configurationItemService;
+    }
 
     @GetMapping
     @Operation(summary = "Get all configuration items")
-    public ResponseEntity<List<ConfigurationItemDTO>> getAllItems() {
-        return ResponseEntity.ok(configurationService.getAllItems());
+    public ResponseEntity<List<ConfigurationItem>> getAllItems() {
+        return ResponseEntity.ok(itemService.getAllItems());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a configuration item by ID")
-    public ResponseEntity<ConfigurationItemDTO> getItemById(@PathVariable Long id) {
-        return ResponseEntity.ok(configurationService.getItemById(id));
+    public ResponseEntity<ConfigurationItem> getItemById(@PathVariable Long id) {
+        return itemService.getItemById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/group/{groupId}")
     @Operation(summary = "Get all configuration items for a specific group")
-    public ResponseEntity<List<ConfigurationItemDTO>> getItemsByGroup(@PathVariable Long groupId) {
-        return ResponseEntity.ok(configurationService.getItemsByGroup(groupId));
+    public ResponseEntity<List<ConfigurationItem>> getItemsByGroup(@PathVariable Long groupId) {
+        return ResponseEntity.ok(itemService.getItemsByGroup(groupId));
     }
 
     @GetMapping("/group/{groupId}/environment/{environment}")
     @Operation(summary = "Get all configuration items for a specific group and environment")
-    public ResponseEntity<List<ConfigurationItemDTO>> getItemsByGroupAndEnvironment(
+    public ResponseEntity<List<ConfigurationItem>> getItemsByGroupAndEnvironment(
             @PathVariable Long groupId,
             @PathVariable String environment) {
-        return ResponseEntity.ok(configurationService.getItemsByGroupAndEnvironment(groupId, environment));
+        return ResponseEntity.ok(itemService.getItemsByGroupAndEnvironment(groupId, environment));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new configuration item")
-    public ResponseEntity<ConfigurationItemDTO> createItem(@RequestBody ConfigurationItemDTO itemDTO) {
-        return new ResponseEntity<>(configurationService.createItem(itemDTO), HttpStatus.CREATED);
+    public ResponseEntity<ConfigurationItem> createItem(@RequestBody ConfigurationItem item) {
+        ConfigurationItem createdItem = itemService.createItem(item);
+        return new ResponseEntity<>(createdItem, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update an existing configuration item")
-    public ResponseEntity<ConfigurationItemDTO> updateItem(
+    public ResponseEntity<ConfigurationItem> updateItem(
             @PathVariable Long id,
-            @RequestBody ConfigurationItemDTO itemDTO) {
-        return ResponseEntity.ok(configurationService.updateItem(id, itemDTO));
+            @RequestBody ConfigurationItem item) {
+        return itemService.updateItem(id, item)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a configuration item")
     public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
-        configurationService.deleteItem(id);
-        return ResponseEntity.noContent().build();
+        if (itemService.deleteItem(id)) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 } 

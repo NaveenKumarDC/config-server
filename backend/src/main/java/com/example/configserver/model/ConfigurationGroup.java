@@ -1,5 +1,6 @@
 package com.example.configserver.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,8 +23,10 @@ public class ConfigurationGroup {
     @Column(nullable = false, unique = true)
     private String name;
     
+    @Column(columnDefinition = "TEXT")
     private String description;
     
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("group")
     private List<ConfigurationItem> items = new ArrayList<>();
 } 

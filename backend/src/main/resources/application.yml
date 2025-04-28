@@ -15,15 +15,36 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:your-email@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    com.example.configserver: DEBUG
+    'org.hibernate.SQL': DEBUG
+    'org.hibernate.type.descriptor.sql.BasicBinder': TRACE
+    'com.example.configserver': DEBUG
 
 springdoc:
   api-docs:
     enabled: true
   swagger-ui:
     path: /swagger-ui.html
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:5468576D5A7134743777217A25432A462D4A614E645267556B58703272357538}
+  expiration: 86400000 # 24 hours in milliseconds
+
+# URL Configuration
+app:
+  url: ${APP_URL:http://localhost:3000}
+  password-reset-expiry: 24 # hours

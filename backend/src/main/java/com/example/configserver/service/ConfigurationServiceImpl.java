@@ -1,16 +1,19 @@
-package com.example.configserver.service.impl;
+package com.example.configserver.service;
 
 import com.example.configserver.dto.ConfigurationGroupDTO;
 import com.example.configserver.dto.ConfigurationItemDTO;
 import com.example.configserver.model.AuditLog;
 import com.example.configserver.model.ConfigurationGroup;
 import com.example.configserver.model.ConfigurationItem;
+import com.example.configserver.model.Environment;
 import com.example.configserver.repository.AuditLogRepository;
 import com.example.configserver.repository.ConfigurationGroupRepository;
 import com.example.configserver.repository.ConfigurationItemRepository;
 import com.example.configserver.service.ConfigurationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,128 +43,32 @@ public class ConfigurationServiceImpl implements ConfigurationService {
                 item.getId(),
                 item.getKey(),
                 item.getValue(),
+                item.getDescription(),
                 item.getEnvironment(),
-                item.getGroup().getId(),
-                item.getGroup().getName()
+                item.getGroupId(),
+                item.getGroup() != null ? item.getGroup().getName() : null
         );
     }
 
-    private void createAuditLog(String action, String entityType, Long entityId, String oldValue, String newValue) {
+    // Method to get the current user ID from the security context
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication.getName();
+        }
+        return "system"; // Default user for system operations
+    }
+
+    private AuditLog createAuditLog(String action, String entityType, Long entityId, String oldValue, String newValue) {
         AuditLog log = new AuditLog();
         log.setAction(action);
         log.setEntityType(entityType);
         log.setEntityId(entityId);
         log.setOldValue(oldValue);
         log.setNewValue(newValue);
-        log.setUserId("system"); // Replace with actual user when authentication is implemented
         log.setTimestamp(LocalDateTime.now());
-        auditLogRepository.save(log);
-    }
-
-    // Group operations
-    @Override
-    public List<ConfigurationGroupDTO> getAllGroups() {
-        return groupRepository.findAll().stream()
-                .map(this::mapToGroupDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public ConfigurationGroupDTO getGroupById(Long id) {
-        return groupRepository.findById(id)
-                .map(this::mapToGroupDTO)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
-    }
-
-    @Override
-    public ConfigurationGroupDTO getGroupByName(String name) {
-        return groupRepository.findByName(name)
-                .map(this::mapToGroupDTO)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with name: " + name));
-    }
-
-    @Override
-    @Transactional
-    public ConfigurationGroupDTO createGroup(ConfigurationGroupDTO groupDTO) {
-        if (groupRepository.existsByName(groupDTO.getName())) {
-            throw new IllegalArgumentException("Group with name " + groupDTO.getName() + " already exists");
-        }
-
-        ConfigurationGroup group = new ConfigurationGroup();
-        group.setName(groupDTO.getName());
-        group.setDescription(groupDTO.getDescription());
-        
-        ConfigurationGroup savedGroup = groupRepository.save(group);
-        createAuditLog("CREATE", "Group", savedGroup.getId(), null, savedGroup.getName());
-        
-        return mapToGroupDTO(savedGroup);
-    }
-
-    @Override
-    @Transactional
-    public ConfigurationGroupDTO updateGroup(Long id, ConfigurationGroupDTO groupDTO) {
-        ConfigurationGroup group = groupRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
-        
-        String oldName = group.getName();
-        String oldDescription = group.getDescription();
-        
-        // Check if new name conflicts with existing groups
-        if (!group.getName().equals(groupDTO.getName()) && groupRepository.existsByName(groupDTO.getName())) {
-            throw new IllegalArgumentException("Group with name " + groupDTO.getName() + " already exists");
-        }
-        
-        group.setName(groupDTO.getName());
-        group.setDescription(groupDTO.getDescription());
-        
-        ConfigurationGroup updatedGroup = groupRepository.save(group);
-        
-        createAuditLog("UPDATE", "Group", updatedGroup.getId(), 
-                "name: " + oldName + ", description: " + oldDescription,
-                "name: " + updatedGroup.getName() + ", description: " + updatedGroup.getDescription());
-        
-        return mapToGroupDTO(updatedGroup);
-    }
-
-    @Override
-    @Transactional
-    public void deleteGroup(Long id) {
-        ConfigurationGroup group = groupRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
-        
-        groupRepository.delete(group);
-        
-        createAuditLog("DELETE", "Group", id, 
-                "name: " + group.getName() + ", description: " + group.getDescription(),
-                null);
-    }
-
-    // Item operations
-    @Override
-    public List<ConfigurationItemDTO> getAllItems() {
-        return itemRepository.findAll().stream()
-                .map(this::mapToItemDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<ConfigurationItemDTO> getItemsByGroup(Long groupId) {
-        ConfigurationGroup group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
-        
-        return itemRepository.findByGroup(group).stream()
-                .map(this::mapToItemDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<ConfigurationItemDTO> getItemsByGroupAndEnvironment(Long groupId, String environment) {
-        ConfigurationGroup group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
-        
-        return itemRepository.findByGroupAndEnvironment(group, environment).stream()
-                .map(this::mapToItemDTO)
-                .collect(Collectors.toList());
+        log.setUserId(getCurrentUserId());
+        return log;
     }
 
     @Override
@@ -187,7 +94,9 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         ConfigurationItem item = new ConfigurationItem();
         item.setKey(itemDTO.getKey());
         item.setValue(itemDTO.getValue());
-        item.setEnvironment(itemDTO.getEnvironment());
+        item.setDescription(itemDTO.getDescription());
+        // Convert the String environment to the Environment enum
+        item.setEnvironment(Environment.valueOf(itemDTO.getEnvironment()));
         item.setGroup(group);
         
         ConfigurationItem savedItem = itemRepository.save(item);
@@ -231,7 +140,9 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         
         item.setKey(itemDTO.getKey());
         item.setValue(itemDTO.getValue());
-        item.setEnvironment(itemDTO.getEnvironment());
+        item.setDescription(itemDTO.getDescription());
+        // Convert the String environment to the Environment enum
+        item.setEnvironment(Environment.valueOf(itemDTO.getEnvironment()));
         item.setGroup(group);
         
         ConfigurationItem updatedItem = itemRepository.save(item);
@@ -263,6 +174,112 @@ public class ConfigurationServiceImpl implements ConfigurationService {
                 ", value: " + item.getValue() + 
                 ", env: " + item.getEnvironment() + 
                 ", groupId: " + item.getGroup().getId(),
+                null);
+    }
+
+    @Override
+    public List<ConfigurationItemDTO> getItemsByGroup(Long groupId) {
+        ConfigurationGroup group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
+        
+        return itemRepository.findByGroup(group).stream()
+                .map(this::mapToItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ConfigurationItemDTO> getItemsByGroupAndEnvironment(Long groupId, String environment) {
+        ConfigurationGroup group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
+        
+        return itemRepository.findByGroupAndEnvironment(group, environment).stream()
+                .map(this::mapToItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ConfigurationItemDTO> getAllItems() {
+        return itemRepository.findAll().stream()
+                .map(this::mapToItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Group operations
+    @Override
+    public List<ConfigurationGroupDTO> getAllGroups() {
+        return groupRepository.findAll().stream()
+                .map(this::mapToGroupDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ConfigurationGroupDTO getGroupById(Long id) {
+        return groupRepository.findById(id)
+                .map(this::mapToGroupDTO)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
+    }
+
+    @Override
+    public ConfigurationGroupDTO getGroupByName(String name) {
+        return groupRepository.findByName(name)
+                .map(this::mapToGroupDTO)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with name: " + name));
+    }
+
+    @Override
+    @Transactional
+    public ConfigurationGroupDTO createGroup(ConfigurationGroupDTO groupDTO) {
+        if (groupRepository.existsByName(groupDTO.getName())) {
+            throw new IllegalArgumentException("Group with name " + groupDTO.getName() + " already exists");
+        }
+
+        ConfigurationGroup group = new ConfigurationGroup();
+        group.setName(groupDTO.getName());
+        group.setDescription(groupDTO.getDescription());
+        
+        ConfigurationGroup savedGroup = groupRepository.save(group);
+        
+        createAuditLog("CREATE", "Group", savedGroup.getId(), null, savedGroup.getName());
+        
+        return mapToGroupDTO(savedGroup);
+    }
+
+    @Override
+    @Transactional
+    public ConfigurationGroupDTO updateGroup(Long id, ConfigurationGroupDTO groupDTO) {
+        ConfigurationGroup group = groupRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
+        
+        String oldName = group.getName();
+        String oldDescription = group.getDescription();
+        
+        // Check if new name conflicts with existing groups
+        if (!group.getName().equals(groupDTO.getName()) && groupRepository.existsByName(groupDTO.getName())) {
+            throw new IllegalArgumentException("Group with name " + groupDTO.getName() + " already exists");
+        }
+        
+        group.setName(groupDTO.getName());
+        group.setDescription(groupDTO.getDescription());
+        
+        ConfigurationGroup updatedGroup = groupRepository.save(group);
+        
+        createAuditLog("UPDATE", "Group", updatedGroup.getId(), 
+                "name: " + oldName + ", description: " + oldDescription,
+                "name: " + updatedGroup.getName() + ", description: " + updatedGroup.getDescription());
+        
+        return mapToGroupDTO(updatedGroup);
+    }
+
+    @Override
+    @Transactional
+    public void deleteGroup(Long id) {
+        ConfigurationGroup group = groupRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
+        
+        groupRepository.delete(group);
+        
+        createAuditLog("DELETE", "Group", id, 
+                "name: " + group.getName() + ", description: " + group.getDescription(),
                 null);
     }
 } 

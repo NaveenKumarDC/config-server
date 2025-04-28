@@ -11,6 +11,7 @@ public class ConfigurationItemDTO {
     private Long id;
     private String key;
     private String value;
+    private String description;
     private String environment;
     private Long groupId;
     private String groupName;

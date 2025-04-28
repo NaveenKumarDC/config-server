@@ -27,35 +27,54 @@ public class DataInitializer {
             ConfigurationGroupDTO paymentGroup = createGroup("payment-service", "Payment Processing Service Configuration");
             ConfigurationGroupDTO notificationGroup = createGroup("notification-service", "Notification Service Configuration");
             
+            // Using constants for configuration keys and descriptions for better maintainability
+            final String API_TIMEOUT_KEY = "api.timeout";
+            final String API_TIMEOUT_DESC = "Connection timeout in seconds";
+            final String API_TIMEOUT_VALUE_DEV = "30";
+            final String USER_PASSWORD_EXPIRY_KEY = "user.password.expiry";
+            final String USER_PASSWORD_EXPIRY_DESC = "Password expiry in days";
+            final String API_MAX_CONNECTIONS_KEY = "api.max-connections";
+            final String API_MAX_CONNECTIONS_DESC = "Maximum number of concurrent connections";
+            final String USER_SESSION_TIMEOUT_KEY = "user.session.timeout";
+            final String USER_SESSION_TIMEOUT_DESC = "User session timeout in minutes";
+            final String PAYMENT_RETRY_COUNT_KEY = "payment.retry.count";
+            final String PAYMENT_RETRY_COUNT_DESC = "Number of payment retry attempts";
+            final String PAYMENT_GATEWAY_URL_KEY = "payment.gateway.url";
+            final String PAYMENT_GATEWAY_URL_DESC = "Payment gateway URL";
+            final String NOTIFICATION_EMAIL_FROM_KEY = "notification.email.from";
+            final String NOTIFICATION_EMAIL_FROM_DESC = "From email address for notifications";
+            final String NOTIFICATION_SMS_ENABLED_KEY = "notification.sms.enabled";
+            final String NOTIFICATION_SMS_ENABLED_DESC = "Flag to enable SMS notifications";
+            
             // Create sample items for DEV environment
-            createItem("api.timeout", "30", Environment.DEV.name(), apiGroup.getId(), apiGroup.getName());
-            createItem("api.max-connections", "100", Environment.DEV.name(), apiGroup.getId(), apiGroup.getName());
-            createItem("user.session.timeout", "60", Environment.DEV.name(), userGroup.getId(), userGroup.getName());
-            createItem("user.password.expiry", "90", Environment.DEV.name(), userGroup.getId(), userGroup.getName());
-            createItem("payment.retry.count", "3", Environment.DEV.name(), paymentGroup.getId(), paymentGroup.getName());
-            createItem("payment.gateway.url", "https://dev-payment-gateway.example.com", Environment.DEV.name(), paymentGroup.getId(), paymentGroup.getName());
-            createItem("notification.email.from", "dev-noreply@example.com", Environment.DEV.name(), notificationGroup.getId(), notificationGroup.getName());
-            createItem("notification.sms.enabled", "true", Environment.DEV.name(), notificationGroup.getId(), notificationGroup.getName());
+            createItem(API_TIMEOUT_KEY, API_TIMEOUT_VALUE_DEV, API_TIMEOUT_DESC, Environment.DEV.name(), apiGroup.getId(), apiGroup.getName());
+            createItem(API_MAX_CONNECTIONS_KEY, "100", API_MAX_CONNECTIONS_DESC, Environment.DEV.name(), apiGroup.getId(), apiGroup.getName());
+            createItem(USER_SESSION_TIMEOUT_KEY, "60", USER_SESSION_TIMEOUT_DESC, Environment.DEV.name(), userGroup.getId(), userGroup.getName());
+            createItem(USER_PASSWORD_EXPIRY_KEY, "90", USER_PASSWORD_EXPIRY_DESC, Environment.DEV.name(), userGroup.getId(), userGroup.getName());
+            createItem(PAYMENT_RETRY_COUNT_KEY, "3", PAYMENT_RETRY_COUNT_DESC, Environment.DEV.name(), paymentGroup.getId(), paymentGroup.getName());
+            createItem(PAYMENT_GATEWAY_URL_KEY, "https://dev-payment-gateway.example.com", PAYMENT_GATEWAY_URL_DESC, Environment.DEV.name(), paymentGroup.getId(), paymentGroup.getName());
+            createItem(NOTIFICATION_EMAIL_FROM_KEY, "dev-noreply@example.com", NOTIFICATION_EMAIL_FROM_DESC, Environment.DEV.name(), notificationGroup.getId(), notificationGroup.getName());
+            createItem(NOTIFICATION_SMS_ENABLED_KEY, "true", NOTIFICATION_SMS_ENABLED_DESC, Environment.DEV.name(), notificationGroup.getId(), notificationGroup.getName());
             
             // Create sample items for STAGE environment
-            createItem("api.timeout", "20", Environment.STAGE.name(), apiGroup.getId(), apiGroup.getName());
-            createItem("api.max-connections", "200", Environment.STAGE.name(), apiGroup.getId(), apiGroup.getName());
-            createItem("user.session.timeout", "45", Environment.STAGE.name(), userGroup.getId(), userGroup.getName());
-            createItem("user.password.expiry", "60", Environment.STAGE.name(), userGroup.getId(), userGroup.getName());
-            createItem("payment.retry.count", "3", Environment.STAGE.name(), paymentGroup.getId(), paymentGroup.getName());
-            createItem("payment.gateway.url", "https://stage-payment-gateway.example.com", Environment.STAGE.name(), paymentGroup.getId(), paymentGroup.getName());
-            createItem("notification.email.from", "stage-noreply@example.com", Environment.STAGE.name(), notificationGroup.getId(), notificationGroup.getName());
-            createItem("notification.sms.enabled", "true", Environment.STAGE.name(), notificationGroup.getId(), notificationGroup.getName());
+            createItem(API_TIMEOUT_KEY, "20", API_TIMEOUT_DESC, Environment.STAGE.name(), apiGroup.getId(), apiGroup.getName());
+            createItem(API_MAX_CONNECTIONS_KEY, "200", API_MAX_CONNECTIONS_DESC, Environment.STAGE.name(), apiGroup.getId(), apiGroup.getName());
+            createItem(USER_SESSION_TIMEOUT_KEY, "45", USER_SESSION_TIMEOUT_DESC, Environment.STAGE.name(), userGroup.getId(), userGroup.getName());
+            createItem(USER_PASSWORD_EXPIRY_KEY, "60", USER_PASSWORD_EXPIRY_DESC, Environment.STAGE.name(), userGroup.getId(), userGroup.getName());
+            createItem(PAYMENT_RETRY_COUNT_KEY, "3", PAYMENT_RETRY_COUNT_DESC, Environment.STAGE.name(), paymentGroup.getId(), paymentGroup.getName());
+            createItem(PAYMENT_GATEWAY_URL_KEY, "https://stage-payment-gateway.example.com", PAYMENT_GATEWAY_URL_DESC, Environment.STAGE.name(), paymentGroup.getId(), paymentGroup.getName());
+            createItem(NOTIFICATION_EMAIL_FROM_KEY, "stage-noreply@example.com", NOTIFICATION_EMAIL_FROM_DESC, Environment.STAGE.name(), notificationGroup.getId(), notificationGroup.getName());
+            createItem(NOTIFICATION_SMS_ENABLED_KEY, "true", NOTIFICATION_SMS_ENABLED_DESC, Environment.STAGE.name(), notificationGroup.getId(), notificationGroup.getName());
             
             // Create sample items for PROD environment
-            createItem("api.timeout", "10", Environment.PROD.name(), apiGroup.getId(), apiGroup.getName());
-            createItem("api.max-connections", "500", Environment.PROD.name(), apiGroup.getId(), apiGroup.getName());
-            createItem("user.session.timeout", "30", Environment.PROD.name(), userGroup.getId(), userGroup.getName());
-            createItem("user.password.expiry", "30", Environment.PROD.name(), userGroup.getId(), userGroup.getName());
-            createItem("payment.retry.count", "5", Environment.PROD.name(), paymentGroup.getId(), paymentGroup.getName());
-            createItem("payment.gateway.url", "https://payment-gateway.example.com", Environment.PROD.name(), paymentGroup.getId(), paymentGroup.getName());
-            createItem("notification.email.from", "noreply@example.com", Environment.PROD.name(), notificationGroup.getId(), notificationGroup.getName());
-            createItem("notification.sms.enabled", "true", Environment.PROD.name(), notificationGroup.getId(), notificationGroup.getName());
+            createItem(API_TIMEOUT_KEY, "10", API_TIMEOUT_DESC, Environment.PROD.name(), apiGroup.getId(), apiGroup.getName());
+            createItem(API_MAX_CONNECTIONS_KEY, "500", API_MAX_CONNECTIONS_DESC, Environment.PROD.name(), apiGroup.getId(), apiGroup.getName());
+            createItem(USER_SESSION_TIMEOUT_KEY, "30", USER_SESSION_TIMEOUT_DESC, Environment.PROD.name(), userGroup.getId(), userGroup.getName());
+            createItem(USER_PASSWORD_EXPIRY_KEY, "30", USER_PASSWORD_EXPIRY_DESC, Environment.PROD.name(), userGroup.getId(), userGroup.getName());
+            createItem(PAYMENT_RETRY_COUNT_KEY, "5", PAYMENT_RETRY_COUNT_DESC, Environment.PROD.name(), paymentGroup.getId(), paymentGroup.getName());
+            createItem(PAYMENT_GATEWAY_URL_KEY, "https://payment-gateway.example.com", PAYMENT_GATEWAY_URL_DESC, Environment.PROD.name(), paymentGroup.getId(), paymentGroup.getName());
+            createItem(NOTIFICATION_EMAIL_FROM_KEY, "noreply@example.com", NOTIFICATION_EMAIL_FROM_DESC, Environment.PROD.name(), notificationGroup.getId(), notificationGroup.getName());
+            createItem(NOTIFICATION_SMS_ENABLED_KEY, "true", NOTIFICATION_SMS_ENABLED_DESC, Environment.PROD.name(), notificationGroup.getId(), notificationGroup.getName());
             
             log.info("Sample configuration data initialized successfully!");
         } catch (Exception e) {
@@ -68,8 +87,8 @@ public class DataInitializer {
         return configurationService.createGroup(groupDTO);
     }
     
-    private ConfigurationItemDTO createItem(String key, String value, String environment, Long groupId, String groupName) {
-        ConfigurationItemDTO itemDTO = new ConfigurationItemDTO(null, key, value, environment, groupId, groupName);
+    private ConfigurationItemDTO createItem(String key, String value, String description, String environment, Long groupId, String groupName) {
+        ConfigurationItemDTO itemDTO = new ConfigurationItemDTO(null, key, value, description, environment, groupId, groupName);
         return configurationService.createItem(itemDTO);
     }
 } 

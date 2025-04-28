@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clear Local Storage</title>
+</head>
+<body>
+  <h1>Local Storage Cleaner</h1>
+  <p>This page will clear your localStorage for this domain.</p>
+  <button id="clearBtn">Clear localStorage</button>
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('clearBtn').addEventListener('click', function() {
+      try {
+        localStorage.clear();
+        document.getElementById('result').innerHTML = '<p style="color: green;">localStorage cleared successfully. <a href="/">Go back to login page</a></p>';
+      } catch (e) {
+        document.getElementById('result').innerHTML = '<p style="color: red;">Error clearing localStorage: ' + e.message + '</p>';
+      }
+    });
+  </script>
+</body>
+</html> 

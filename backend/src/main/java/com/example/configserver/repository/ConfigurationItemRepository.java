@@ -10,8 +10,17 @@ import java.util.Optional;
 
 @Repository
 public interface ConfigurationItemRepository extends JpaRepository<ConfigurationItem, Long> {
+
     List<ConfigurationItem> findByGroup(ConfigurationGroup group);
+    
     List<ConfigurationItem> findByGroupAndEnvironment(ConfigurationGroup group, String environment);
+    
     Optional<ConfigurationItem> findByKeyAndGroupAndEnvironment(String key, ConfigurationGroup group, String environment);
+    
     boolean existsByKeyAndGroupAndEnvironment(String key, ConfigurationGroup group, String environment);
+    
+    // Additional methods needed by tests
+    List<ConfigurationItem> findByGroup_Id(Long groupId);
+    
+    List<ConfigurationItem> findByGroup_IdAndEnvironment(Long groupId, String environment);
 } 
